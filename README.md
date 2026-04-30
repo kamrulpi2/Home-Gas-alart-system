@@ -31,4 +31,6 @@ The web dashboard is inside the `webapp` folder.
 
 Made with ❤️ using MicroPython + Firebase
 <img width="1402" height="783" alt="image" src="https://github.com/user-attachments/assets/8b726bfa-0279-4104-845f-f61b55dbdc1a" />
+<img width="572" height="737" alt="image" src="https://github.com/user-attachments/assets/e59dffd4-e20f-46b3-a447-878bd419ce30" />
+
 
