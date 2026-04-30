@@ -30,3 +30,5 @@ Open `webapp/index.html` in browser (it connects to Firebase automatically).
 The web dashboard is inside the `webapp` folder.
 
 Made with ❤️ using MicroPython + Firebase
+<img width="1402" height="783" alt="image" src="https://github.com/user-attachments/assets/8b726bfa-0279-4104-845f-f61b55dbdc1a" />
+
