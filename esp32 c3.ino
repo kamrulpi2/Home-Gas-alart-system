@@ -16,8 +16,8 @@
 
 // ====================== Firebase Config ======================
 // Replace with your own Firebase project details
-#define API_KEY       "AIzaSyAxHjFOwi-_8MYHi0mwsHid6VBSSLHghNo"
-#define DATABASE_URL  "https://dht22iot-5b3fd-default-rtdb.firebaseio.com"
+#define API_KEY       "AI**********************************o"
+#define DATABASE_URL  "h*********************************************"
 
 // ====================== Pin Definitions ======================
 #define MQ5_PIN       4
