@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gas & DHT11 Monitor</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin: 30px 0;
+      font-size: 2.8rem;
+      text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-10px);
+    }
+    .value {
+      font-size: 3.5rem;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+    .label {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    .gas { color: #ff4d4d; }
+    .temp { color: #ffaa00; }
+    .humidity { color: #00ccff; }
+
+    .alert {
+      background: linear-gradient(45deg, #ff1744, #d50000);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 23, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+    }
+
+    .status {
+      font-size: 1.3rem;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .safe { background: #00c853; }
+    .danger { background: #ff1744; animation: pulse 1s infinite; }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Gas & DHT11 IoT Monitor</h1>
+    
+    <div class="grid">
+      <!-- Gas Card -->
+      <div class="card" id="gasCard">
+        <h2>Gas Level (MQ-5)</h2>
+        <div class="value gas" id="gasValue">0</div>
+        <div class="label">Percentage (%)</div>
+        <div class="status" id="gasStatus">Safe</div>
+      </div>
+
+      <!-- Temperature Card -->
+      <div class="card">
+        <h2>Temperature</h2>
+        <div class="value temp" id="tempValue">0</div>
+        <div class="label">°C</div>
+      </div>
+
+      <!-- Humidity Card -->
+      <div class="card">
+        <h2>Humidity</h2>
+        <div class="value humidity" id="humidityValue">0</div>
+        <div class="label">%</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 25px; text-align: left;">
+      <h2>System Status</h2>
+      <p><strong>Last Updated:</strong> <span id="lastUpdate">Just now</span></p>
+      <p><strong>Alert Status:</strong> <span id="alertText" style="color: lime;">Normal</span></p>
+    </div>
+  </div>
+
+  <footer>
+    Powered by Firebase • ESP32-C3 + MQ-5 + DHT11
+  </footer>
+
+  <script>
+    // ================== Your Firebase Config ==================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxHjFOwi-_8MYHi0mwsHid6VBSSLHghNo",
+      authDomain: "dht22iot-5b3fd.firebaseapp.com",
+      databaseURL: "https://dht22iot-5b3fd-default-rtdb.firebaseio.com",
+      projectId: "dht22iot-5b3fd",
+      storageBucket: "dht22iot-5b3fd.firebasestorage.app",
+      messagingSenderId: "553562336598",
+      appId: "1:553562336598:web:c0536675f96b3d3ecd7af7"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Reference to your sensor data
+    const sensorRef = db.ref('sensor');
+
+    // ================== Real-time Listener ==================
+    sensorRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      
+      if (data) {
+        // Update Gas
+        document.getElementById('gasValue').textContent = data.gas || 0;
+        
+        // Update Temperature & Humidity
+        document.getElementById('tempValue').textContent = data.temperature?.toFixed(1) || 0;
+        document.getElementById('humidityValue').textContent = data.humidity || 0;
+
+        const gasLevel = data.gas || 0;
+        const isAlert = data.alert || false;
+
+        // Gas Card Alert Logic
+        const gasCard = document.getElementById('gasCard');
+        const gasStatus = document.getElementById('gasStatus');
+
+        if (isAlert || gasLevel >= 30) {
+          gasCard.classList.add('alert');
+          gasStatus.textContent = "DANGER! GAS LEAK";
+          gasStatus.className = "status danger";
+          document.getElementById('alertText').textContent = "⚠️ GAS LEAK DETECTED";
+          document.getElementById('alertText').style.color = "#ff1744";
+        } else {
+          gasCard.classList.remove('alert');
+          gasStatus.textContent = "Normal";
+          gasStatus.className = "status safe";
+          document.getElementById('alertText').textContent = "All Systems Normal";
+          document.getElementById('alertText').style.color = "lime";
+        }
+
+        // Update last time
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+      }
+    }, (error) => {
+      console.error("Firebase error:", error);
+      alert("Failed to connect to Firebase. Check your internet or database rules.");
+    });
+  </script>
+</body>
+</html>
